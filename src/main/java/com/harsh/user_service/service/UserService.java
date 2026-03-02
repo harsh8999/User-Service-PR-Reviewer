@@ -2,6 +2,7 @@ package com.harsh.user_service.service;
 
 import com.harsh.user_service.dto.CreateUserRequest;
 import com.harsh.user_service.dto.UpdateUserRequest;
+import com.harsh.user_service.exception.EmailAlreadyExistsException;
 import com.harsh.user_service.exception.UserNotFoundException;
 import com.harsh.user_service.model.User;
 import com.harsh.user_service.repository.UserRepository;
@@ -19,7 +20,7 @@ public class UserService {
 
     public User createUser(CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already in use: " + request.getEmail());
+            throw new EmailAlreadyExistsException(request.getEmail());
         }
         User user = User.builder()
                 .firstName(request.getFirstName())
@@ -46,10 +47,12 @@ public class UserService {
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getPhone() != null) user.setPhone(request.getPhone());
-        return user;
+        user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
     }
 
     public void deleteUser(Long id) {
+        getUserById(id); // throws UserNotFoundException if not found
         userRepository.deleteById(id);
     }
 }

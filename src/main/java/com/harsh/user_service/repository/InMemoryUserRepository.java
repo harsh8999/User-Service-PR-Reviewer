@@ -33,7 +33,7 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return store.values().stream()
-                .filter(u -> u.getEmail().equalsIgnoreCase(email))
+                .filter(u -> email.equalsIgnoreCase(u.getEmail()))
                 .findFirst();
     }
 
@@ -50,6 +50,6 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public boolean existsByEmail(String email) {
         return store.values().stream()
-                .anyMatch(u -> u.getEmail().equals(email));
+                .anyMatch(u -> email.equalsIgnoreCase(u.getEmail()));
     }
 }
