@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(errors));
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        return ResponseEntity.ok(errorBody(ex.getMessage()));
+    }
+
     private Map<String, Object> errorBody(String message) {
         return Map.of(
                 "timestamp", LocalDateTime.now().toString(),

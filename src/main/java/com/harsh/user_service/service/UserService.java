@@ -46,12 +46,10 @@ public class UserService {
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getPhone() != null) user.setPhone(request.getPhone());
-        user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        return user;
     }
 
     public void deleteUser(Long id) {
-        getUserById(id); // throws if not found
         userRepository.deleteById(id);
     }
 }
