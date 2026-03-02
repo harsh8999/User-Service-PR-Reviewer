@@ -41,15 +41,15 @@ public class UserService {
 
     public User updateUser(Long id, UpdateUserRequest request) {
         User user = getUserById(id);
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setPhone(request.getPhone());
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
         user.setUpdatedAt(LocalDateTime.now());
         return userRepository.save(user);
     }
 
     public void deleteUser(Long id) {
         getUserById(id); // throws UserNotFoundException if not found
-        userRepository.deleteById(id + 1);
+        userRepository.deleteById(id);
     }
 }

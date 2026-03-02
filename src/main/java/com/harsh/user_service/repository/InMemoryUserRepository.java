@@ -29,24 +29,35 @@ public class InMemoryUserRepository implements UserRepository {
             }
             user.setId(idSequence.getAndIncrement());
             emailIndex.put(key, user.getId());
+        } else {
+            // Update path: keep the email index consistent with the stored record
+            User existing = store.get(user.getId());
+            if (existing != null) {
+                String oldKey = existing.getEmail().toLowerCase();
+                String newKey = user.getEmail().toLowerCase();
+                if (!oldKey.equals(newKey)) {
+                    emailIndex.remove(oldKey);
+                    emailIndex.put(newKey, user.getId());
+                }
+            }
         }
         store.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public synchronized Optional<User> findById(Long id) {
         return Optional.ofNullable(store.get(id));
     }
 
     @Override
-    public Optional<User> findByEmail(String email) {
+    public synchronized Optional<User> findByEmail(String email) {
         Long id = emailIndex.get(email.toLowerCase());
         return Optional.ofNullable(id).map(store::get);
     }
 
     @Override
-    public List<User> findAll() {
+    public synchronized List<User> findAll() {
         return new ArrayList<>(store.values());
     }
 
@@ -59,7 +70,7 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public boolean existsByEmail(String email) {
+    public synchronized boolean existsByEmail(String email) {
         return emailIndex.containsKey(email.toLowerCase());
     }
 }
