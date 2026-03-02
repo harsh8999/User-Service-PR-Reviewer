@@ -32,8 +32,10 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userService.getAllUsers().stream()
+    public ResponseEntity<List<UserResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        List<UserResponse> users = userService.getAllUsers(page, size).stream()
                 .map(UserMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(users);

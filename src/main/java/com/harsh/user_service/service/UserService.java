@@ -35,21 +35,28 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<User> getAllUsers(int page, int size) {
+        return userRepository.findAll(page, size);
     }
 
     public User updateUser(Long id, UpdateUserRequest request) {
-        User user = getUserById(id);
-        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
-        if (request.getLastName() != null) user.setLastName(request.getLastName());
-        if (request.getPhone() != null) user.setPhone(request.getPhone());
-        user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        User existing = getUserById(id);
+        // Build a new object rather than mutating the stored reference directly
+        User updated = User.builder()
+                .id(existing.getId())
+                .firstName(request.getFirstName() != null ? request.getFirstName() : existing.getFirstName())
+                .lastName(request.getLastName() != null ? request.getLastName() : existing.getLastName())
+                .email(existing.getEmail())
+                .phone(request.getPhone() != null ? request.getPhone() : existing.getPhone())
+                .createdAt(existing.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        return userRepository.save(updated);
     }
 
     public void deleteUser(Long id) {
-        getUserById(id); // throws UserNotFoundException if not found
-        userRepository.deleteById(id);
+        if (!userRepository.deleteById(id)) {
+            throw new UserNotFoundException(id);
+        }
     }
 }
