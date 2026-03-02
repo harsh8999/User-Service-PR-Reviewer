@@ -2,6 +2,7 @@ package com.harsh.user_service.controller;
 
 import com.harsh.user_service.dto.CreateUserRequest;
 import com.harsh.user_service.dto.UpdateUserRequest;
+import com.harsh.user_service.dto.UserMapper;
 import com.harsh.user_service.dto.UserResponse;
 import com.harsh.user_service.service.UserService;
 import jakarta.validation.Valid;
@@ -22,18 +23,18 @@ public class UserController {
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(UserResponse.from(userService.createUser(request)));
+                .body(UserMapper.toResponse(userService.createUser(request)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(UserResponse.from(userService.getUserById(id)));
+        return ResponseEntity.ok(UserMapper.toResponse(userService.getUserById(id)));
     }
 
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers().stream()
-                .map(UserResponse::from)
+                .map(UserMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(users);
     }
@@ -42,7 +43,7 @@ public class UserController {
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest request) {
-        return ResponseEntity.ok(UserResponse.from(userService.updateUser(id, request)));
+        return ResponseEntity.ok(UserMapper.toResponse(userService.updateUser(id, request)));
     }
 
     @DeleteMapping("/{id}")

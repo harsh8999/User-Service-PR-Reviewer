@@ -1,5 +1,6 @@
 package com.harsh.user_service.repository;
 
+import com.harsh.user_service.exception.EmailAlreadyExistsException;
 import com.harsh.user_service.model.User;
 import org.springframework.stereotype.Repository;
 
@@ -14,12 +15,20 @@ import java.util.concurrent.atomic.AtomicLong;
 public class InMemoryUserRepository implements UserRepository {
 
     private final Map<Long, User> store = new ConcurrentHashMap<>();
+    // Secondary index: normalised email -> user id for O(1) lookups and atomic uniqueness checks
+    private final Map<String, Long> emailIndex = new ConcurrentHashMap<>();
     private final AtomicLong idSequence = new AtomicLong(1);
 
     @Override
-    public User save(User user) {
+    public synchronized User save(User user) {
         if (user.getId() == null) {
+            // Atomic check-and-insert on the email index eliminates the TOCTOU race
+            String key = user.getEmail().toLowerCase();
+            if (emailIndex.containsKey(key)) {
+                throw new EmailAlreadyExistsException(user.getEmail());
+            }
             user.setId(idSequence.getAndIncrement());
+            emailIndex.put(key, user.getId());
         }
         store.put(user.getId(), user);
         return user;
@@ -32,9 +41,8 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return store.values().stream()
-                .filter(u -> email.equalsIgnoreCase(u.getEmail()))
-                .findFirst();
+        Long id = emailIndex.get(email.toLowerCase());
+        return Optional.ofNullable(id).map(store::get);
     }
 
     @Override
@@ -43,13 +51,15 @@ public class InMemoryUserRepository implements UserRepository {
     }
 
     @Override
-    public void deleteById(Long id) {
-        store.remove(id);
+    public synchronized void deleteById(Long id) {
+        User user = store.remove(id);
+        if (user != null) {
+            emailIndex.remove(user.getEmail().toLowerCase());
+        }
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        return store.values().stream()
-                .anyMatch(u -> email.equalsIgnoreCase(u.getEmail()));
+        return emailIndex.containsKey(email.toLowerCase());
     }
 }

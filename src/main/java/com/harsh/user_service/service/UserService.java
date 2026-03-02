@@ -2,7 +2,6 @@ package com.harsh.user_service.service;
 
 import com.harsh.user_service.dto.CreateUserRequest;
 import com.harsh.user_service.dto.UpdateUserRequest;
-import com.harsh.user_service.exception.EmailAlreadyExistsException;
 import com.harsh.user_service.exception.UserNotFoundException;
 import com.harsh.user_service.model.User;
 import com.harsh.user_service.repository.UserRepository;
@@ -19,9 +18,6 @@ public class UserService {
     private final UserRepository userRepository;
 
     public User createUser(CreateUserRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException(request.getEmail());
-        }
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -30,6 +26,7 @@ public class UserService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+        // Email uniqueness is enforced atomically inside the repository
         return userRepository.save(user);
     }
 
